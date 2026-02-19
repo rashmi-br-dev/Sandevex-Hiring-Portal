@@ -8,6 +8,7 @@ export interface IOffer extends Document {
     respondedAt?: Date;
     sentAt: Date;
     expiresAt: Date;
+    physicalLetterCollected?: boolean;
 }
 
 const OfferSchema = new Schema<IOffer>({
@@ -41,7 +42,13 @@ const OfferSchema = new Schema<IOffer>({
     expiresAt: {
         type: Date,
         required: true
+    },
+    physicalLetterCollected: {
+        type: Boolean,
+        default: false
     }
+}, {
+    timestamps: true // This adds createdAt and updatedAt automatically
 });
 
 // Index for faster querying

@@ -472,7 +472,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="h-[600px] overflow-hidden border flex flex-col">
+        <div className="overflow-hidden border flex flex-col">
             {/* Scrollable content area */}
             <div className="flex-1 overflow-y-auto hide-scrollbar">
                 <div className="p-6 space-y-6">

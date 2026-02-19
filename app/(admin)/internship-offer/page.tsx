@@ -3,14 +3,15 @@
 import { useEffect, useState, useMemo } from "react";
 import {
     Table, Tag, Button, Space, Typography, Input, message,
-    Tooltip, Dropdown
+    Tooltip, Dropdown, Badge
 } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import type { MenuProps } from "antd";
 import {
     ReloadOutlined, SearchOutlined, FilterOutlined,
     BarChartOutlined, SendOutlined, CheckCircleOutlined,
-    CloseCircleOutlined, ClockCircleOutlined
+    CloseCircleOutlined, ClockCircleOutlined, FileTextOutlined,
+    CheckOutlined
 } from "@ant-design/icons";
 import OfferSummaryModal from "@/components/OfferSummaryModal";
 import StudentDetailsModal from "@/components/StudentDetailsModal";
@@ -34,13 +35,16 @@ interface Candidate {
     offerId?: string;
     offerSentAt?: string;
     offerExpiresAt?: string;
+    physicalLetterCollected?: boolean;
 }
 
 export default function OffersPage() {
     const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
     const [loading, setLoading] = useState(false);
+    const [updatingLetter, setUpdatingLetter] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+    const [letterFilter, setLetterFilter] = useState<string | undefined>(undefined);
     const [summaryModalVisible, setSummaryModalVisible] = useState(false);
     const [studentModalVisible, setStudentModalVisible] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -76,7 +80,7 @@ export default function OffersPage() {
         fetchAllCandidates();
     }, []);
 
-    // Apply filters to ALL candidates (not just paginated)
+    // Apply filters to ALL candidates
     const filteredCandidates = useMemo(() => {
         let filtered = [...allCandidates];
 
@@ -91,15 +95,29 @@ export default function OffersPage() {
             );
         }
 
-        // Apply status filter
+        // Apply offer status filter
         if (statusFilter && statusFilter !== 'all') {
             filtered = filtered.filter(candidate =>
                 candidate.offerStatus === statusFilter
             );
         }
 
+        // Apply physical letter filter
+        if (letterFilter && letterFilter !== 'all') {
+            if (letterFilter === 'collected') {
+                filtered = filtered.filter(candidate =>
+                    candidate.physicalLetterCollected === true
+                );
+            } else if (letterFilter === 'not_collected') {
+                filtered = filtered.filter(candidate =>
+                    candidate.physicalLetterCollected === false &&
+                    candidate.offerStatus === 'accepted'
+                );
+            }
+        }
+
         return filtered;
-    }, [allCandidates, search, statusFilter]);
+    }, [allCandidates, search, statusFilter, letterFilter]);
 
     // Get paginated data from filtered results
     const paginatedCandidates = useMemo(() => {
@@ -112,16 +130,45 @@ export default function OffersPage() {
     useEffect(() => {
         setPagination(prev => ({
             ...prev,
-            current: 1, // Reset to first page when filters change
+            current: 1,
             total: filteredCandidates.length,
         }));
     }, [filteredCandidates.length]);
 
+    // Function to update physical letter collection status
+    const updatePhysicalLetterStatus = async (offerId: string, collected: boolean) => {
+        try {
+            setUpdatingLetter(offerId);
+
+            const res = await fetch("/api/offers/update-physical-letter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ offerId, collected })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error);
+
+            // Update local state
+            setAllCandidates(prev => prev.map(candidate => {
+                if (candidate.offerId === offerId) {
+                    return { ...candidate, physicalLetterCollected: collected };
+                }
+                return candidate;
+            }));
+
+            message.success(data.message);
+
+        } catch (error: any) {
+            message.error(error.message || "Failed to update status");
+        } finally {
+            setUpdatingLetter(null);
+        }
+    };
+
     const sendOffer = async (candidate: Candidate) => {
         try {
-            // console.log("📤 Sending offer for candidate:", candidate._id, candidate.email);
-
-            // STEP 1: Create offer in database
             const res = await fetch("/api/offers", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -131,20 +178,12 @@ export default function OffersPage() {
                 }),
             });
 
-            // console.log("📥 Response status:", res.status);
-
             const data = await res.json();
-            // console.log("📦 Response data:", data);
-
             if (!res.ok) throw new Error(data.error);
 
-            // 🟢 Offer created successfully
             message.success("Offer created successfully");
 
-            // STEP 2: Send email with the token from the response
             try {
-                const token = data.offer?.token || data.token;
-
                 await sendOfferEmail({
                     email: candidate.email,
                     full_name: candidate.fullName,
@@ -152,22 +191,19 @@ export default function OffersPage() {
                     department: "Engineering",
                     mode: "Remote",
                     duration: "6 Months",
-                    token: token
+                    token: data.token
                 });
 
-                console.log("✅ Email sent successfully");
                 message.success("Offer email sent 📩");
 
             } catch (emailError) {
-                console.error("❌ Email failed:", emailError);
+                console.error("Email failed:", emailError);
                 message.warning("Offer created but email failed to send");
             }
 
-            // STEP 3: Refresh the list
             fetchAllCandidates();
 
         } catch (e: any) {
-            console.error("❌ Send offer error:", e);
             message.error(e.message || "Failed to create offer");
         }
     };
@@ -186,9 +222,6 @@ export default function OffersPage() {
             message.success("Offer reset successfully");
 
             try {
-                const token = data.offer?.token || data.token;
-                console.log("✅ Token received:", token);
-
                 await sendOfferEmail({
                     email: candidate.email,
                     full_name: candidate.fullName,
@@ -196,7 +229,7 @@ export default function OffersPage() {
                     department: "Engineering",
                     mode: "Remote",
                     duration: "6 Months",
-                    token: token
+                    token: data.token
                 });
 
                 message.success("New offer email sent 🔁");
@@ -288,11 +321,33 @@ export default function OffersPage() {
         },
     ];
 
+    // Filter menu items for Physical Letter column
+    const letterFilterItems: MenuProps['items'] = [
+        {
+            key: 'all',
+            label: 'All',
+            onClick: () => setLetterFilter(undefined)
+        },
+        {
+            type: 'divider'
+        },
+        {
+            key: 'collected',
+            label: <span><CheckCircleOutlined className="mr-2 text-green-500" /> Collected</span>,
+            onClick: () => setLetterFilter('collected')
+        },
+        {
+            key: 'not_collected',
+            label: <span><ClockCircleOutlined className="mr-2 text-orange-500" /> Not Collected</span>,
+            onClick: () => setLetterFilter('not_collected')
+        },
+    ];
+
     const columns: ColumnsType<Candidate> = [
         {
             title: "Candidate",
             key: "candidate",
-            width: 250,
+            width: 210,
             render: (_, r) => (
                 <div>
                     <div className="font-medium">{r.fullName}</div>
@@ -307,7 +362,11 @@ export default function OffersPage() {
             title: "College",
             key: "college",
             width: 200,
-            render: (_, r) => r.collegeName || '-',
+            render: (_, r) => (
+                <span className="text-xs text-gray-700 dark:text-gray-300">
+                    {r.collegeName || '-'}
+                </span>
+            ),
         },
         {
             title: (
@@ -342,15 +401,75 @@ export default function OffersPage() {
             ),
         },
         {
+            title: (
+                <div className="flex items-center">
+                    <span className="mr-2">Physical Letter</span>
+                    <Dropdown
+                        menu={{
+                            items: letterFilterItems,
+                            selectedKeys: letterFilter ? [letterFilter] : ['all']
+                        }}
+                        trigger={['click']}
+                    >
+                        <Button
+                            type="text"
+                            icon={<FilterOutlined />}
+                            size="small"
+                            className={letterFilter ? 'text-blue-500' : ''}
+                        />
+                    </Dropdown>
+                </div>
+            ),
+            key: "physicalLetter",
+            width: 160,
+            render: (_, r) => {
+                // Only show for accepted offers
+                if (r.offerStatus !== 'accepted') {
+                    return <span className="text-gray-400">-</span>;
+                }
+
+                if (r.physicalLetterCollected) {
+                    return (
+                        <Tag icon={<CheckCircleOutlined />} color="success" className="px-3 py-1">
+                            Collected
+                        </Tag>
+                    );
+                }
+
+                return (
+                    <Space.Compact block>
+                        <Tag icon={<ClockCircleOutlined />} color="warning" className="px-3 py-1">
+                            Not Collected
+                        </Tag>
+                        <Tooltip title="Mark as Collected">
+                            <Button
+                                size="small"
+                                icon={<FileTextOutlined />}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (r.offerId) {
+                                        updatePhysicalLetterStatus(r.offerId, true);
+                                    }
+                                }}
+                                loading={updatingLetter === r.offerId}
+                                disabled={r.physicalLetterCollected}
+                                className="ml-1"
+                            />
+                        </Tooltip>
+                    </Space.Compact>
+                );
+            },
+        },
+        {
             title: "Sent",
             key: "sentAt",
-            width: 150,
+            width: 120,
             render: (_, r) => r.offerSentAt ? new Date(r.offerSentAt).toLocaleString() : '-',
         },
         {
             title: "Expires",
             key: "expiresAt",
-            width: 150,
+            width: 120,
             render: (_, r) => {
                 if (!r.offerExpiresAt) return '-';
                 const date = new Date(r.offerExpiresAt);
@@ -427,10 +546,18 @@ export default function OffersPage() {
     const clearFilters = () => {
         setSearch("");
         setStatusFilter(undefined);
+        setLetterFilter(undefined);
     };
 
+    // Count active filters for badge
+    const activeFilterCount = [
+        statusFilter ? 1 : 0,
+        letterFilter ? 1 : 0,
+        search ? 1 : 0
+    ].reduce((a, b) => a + b, 0);
+
     return (
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-0">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -457,22 +584,49 @@ export default function OffersPage() {
 
                 {/* Search and Clear on the right */}
                 <div className="flex gap-4 items-center">
-                    <Input
-                        placeholder="Search candidates..."
-                        prefix={<SearchOutlined className="text-gray-400" />}
-                        allowClear
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ width: 250 }}
-                    />
+                    <Badge count={activeFilterCount} size="small">
+                        <Input
+                            placeholder="Search candidates..."
+                            prefix={<SearchOutlined className="text-gray-400" />}
+                            allowClear
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ width: 250 }}
+                        />
+                    </Badge>
 
-                    {(search || statusFilter) && (
+                    {(search || statusFilter || letterFilter) && (
                         <Button icon={<FilterOutlined />} onClick={clearFilters}>
-                            Clear
+                            Clear All
                         </Button>
                     )}
                 </div>
             </div>
+
+            {/* Active Filters Display */}
+            {(statusFilter || letterFilter) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-gray-500">Active filters:</span>
+                    {statusFilter && (
+                        <Tag
+                            closable
+                            onClose={() => setStatusFilter(undefined)}
+                            className="flex items-center"
+                        >
+                            Status: {getStatusText(statusFilter)}
+                        </Tag>
+                    )}
+                    {letterFilter && (
+                        <Tag
+                            closable
+                            onClose={() => setLetterFilter(undefined)}
+                            className="flex items-center"
+                        >
+                            Letter: {letterFilter === 'collected' ? 'Collected' : 'Not Collected'}
+                        </Tag>
+                    )}
+                </div>
+            )}
 
             {/* Table */}
             <Table
