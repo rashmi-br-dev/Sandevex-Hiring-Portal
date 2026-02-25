@@ -69,7 +69,14 @@ export async function GET(request: NextRequest) {
         ]);
 
         // Domain Analysis
-        const domainStats = interns.reduce((acc: Record<string, any>, intern: InternWithProfile) => {
+        const domainStats = interns.reduce((acc: Record<string, {
+            total: number;
+            active: number;
+            completed: number;
+            terminated: number;
+            feePaid: number;
+            certificateIssued: number;
+        }>, intern: InternWithProfile) => {
             const domain = intern.preferredDomain || 'Unknown';
             if (!acc[domain]) {
                 acc[domain] = {
@@ -154,11 +161,18 @@ export async function GET(request: NextRequest) {
                 totalStats,
                 domainStats: Object.entries(domainStats).map(([domain, stats]) => ({
                     domain,
-                    ...stats
+                    ...(stats as {
+                        total: number;
+                        active: number;
+                        completed: number;
+                        terminated: number;
+                        feePaid: number;
+                        certificateIssued: number;
+                    })
                 })),
                 monthlyConversions: Object.values(monthlyConversions).sort((a: any, b: any) => 
                     b.month.localeCompare(a.month)
-                ),
+                ) as Array<{month: string, count: number, domains: Record<string, number>}>,
                 recentActivity,
                 skillLevelStats: Object.entries(skillLevelStats).map(([level, count]) => ({
                     level,

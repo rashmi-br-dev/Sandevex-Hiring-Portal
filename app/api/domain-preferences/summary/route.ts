@@ -57,9 +57,9 @@ export async function GET() {
         });
 
         // Technology statistics
-        const technologyStats = preferences.reduce((acc, pref) => {
+        const technologyStats = preferences.reduce((acc: Record<string, number>, pref) => {
             if (pref.technologies && Array.isArray(pref.technologies)) {
-                pref.technologies.forEach(tech => {
+                pref.technologies.forEach((tech: string) => {
                     if (tech && tech.trim()) {
                         acc[tech] = (acc[tech] || 0) + 1;
                     }
@@ -80,11 +80,11 @@ export async function GET() {
 
         // Sort and limit results for better display
         const sortedDomains = Object.entries(domainStats)
-            .sort(([,a], [,b]) => b - a)
+            .sort((a: [string, any], b: [string, any]) => (b[1] as number) - (a[1] as number))
             .slice(0, 10);
 
         const sortedColleges = Object.entries(collegeStats)
-            .sort(([,a], [,b]) => b - a)
+            .sort((a: [string, any], b: [string, any]) => (b[1] as number) - (a[1] as number))
             .slice(0, 10);
 
         const sortedTechnologies = Object.entries(technologyStats)

@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { Offer } from "@/models/Offer";
+import Offer from "@/models/Offer";
 import { InternProfile } from "@/models/intern";
 
 export async function syncOfferLetterStatus() {
