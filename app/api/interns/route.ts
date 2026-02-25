@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get student details
-        const studentRes = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/candidates/with-offer-status`);
+        const studentRes = await fetch(`${request.nextUrl.origin}/api/candidates/with-offer-status`);
         const studentData = await studentRes.json();
         const student = studentData.candidates?.find((s: any) => s._id === studentId);
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get offer details
-        const offerRes = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/offers`);
+        const offerRes = await fetch(`${request.nextUrl.origin}/api/offers`);
         const offerData = await offerRes.json();
         const offer = offerData.offers?.find((o: any) => o._id === offerId);
 
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get domain preference details
-        const domainRes = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/domain-preferences?limit=1000`);
+        const domainRes = await fetch(`${request.nextUrl.origin}/api/domain-preferences?limit=1000`);
         const domainData = await domainRes.json();
         const domainPreference = domainData.data?.find((d: any) => d.email === student.email);
 
