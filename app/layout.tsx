@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
+import { ConfigProvider } from 'antd';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sandevex.com"), // change after deployment
@@ -67,7 +68,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ConfigProvider>
+            {children}
+          </ConfigProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -342,29 +342,31 @@ export default function CandidatesPage() {
             </div>
 
             {/* Active Filters */}
-            {selectedCollege && (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Active filter:</span>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
-                            College: {selectedCollege}
-                            <button
-                                onClick={handleClearFilters}
-                                className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                            >
-                                ×
-                            </button>
-                        </span>
+            <div className="min-h-[30px]">
+                {selectedCollege ? (
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Active filter:</span>
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm border border-border">
+                                College: {selectedCollege}
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        </div>
+                        <Button
+                            size="small"
+                            icon={<FilterOutlined />}
+                            onClick={handleClearFilters}
+                        >
+                            Clear all filters
+                        </Button>
                     </div>
-                    <Button
-                        size="small"
-                        icon={<FilterOutlined />}
-                        onClick={handleClearFilters}
-                    >
-                        Clear all filters
-                    </Button>
-                </div>
-            )}
+                ) : null}
+            </div>
 
             {/* Table */}
             <div className="border rounded-lg overflow-hidden">
@@ -385,7 +387,7 @@ export default function CandidatesPage() {
                         showTotal: (total, range) =>
                             `${range[0]}-${range[1]} of ${total} students`,
                     }}
-                    scroll={{ y: "calc(100vh - 300px)" }}
+                    scroll={{ y: "calc(100vh - 350px)" }}
                     locale={{
                         emptyText: loading ? 'Loading...' : 'No candidates found'
                     }}

@@ -604,29 +604,31 @@ export default function OffersPage() {
             </div>
 
             {/* Active Filters Display */}
-            {(statusFilter || letterFilter) && (
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm text-gray-500">Active filters:</span>
-                    {statusFilter && (
-                        <Tag
-                            closable
-                            onClose={() => setStatusFilter(undefined)}
-                            className="flex items-center"
-                        >
-                            Status: {getStatusText(statusFilter)}
-                        </Tag>
-                    )}
-                    {letterFilter && (
-                        <Tag
-                            closable
-                            onClose={() => setLetterFilter(undefined)}
-                            className="flex items-center"
-                        >
-                            Letter: {letterFilter === 'collected' ? 'Collected' : 'Not Collected'}
-                        </Tag>
-                    )}
-                </div>
-            )}
+            <div className="min-h-[30px] pt-5 pb-5">
+                {(statusFilter || letterFilter) ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm text-muted-foreground">Active filters:</span>
+                        {statusFilter && (
+                            <Tag
+                                closable
+                                onClose={() => setStatusFilter(undefined)}
+                                className="flex items-center bg-secondary text-secondary-foreground border border-border"
+                            >
+                                Status: {getStatusText(statusFilter)}
+                            </Tag>
+                        )}
+                        {letterFilter && (
+                            <Tag
+                                closable
+                                onClose={() => setLetterFilter(undefined)}
+                                className="flex items-center bg-secondary text-secondary-foreground border border-border"
+                            >
+                                Letter: {letterFilter === 'collected' ? 'Collected' : 'Not Collected'}
+                            </Tag>
+                        )}
+                    </div>
+                ) : null}
+            </div>
 
             {/* Table */}
             <Table
@@ -637,7 +639,7 @@ export default function OffersPage() {
                 onChange={handleTableChange}
                 onRow={(record) => ({
                     onClick: () => handleRowClick(record),
-                    className: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900'
+                    className: 'cursor-pointer hover:bg-accent'
                 })}
                 pagination={{
                     ...pagination,
@@ -646,7 +648,7 @@ export default function OffersPage() {
                     showTotal: (total, range) =>
                         `${range[0]}-${range[1]} of ${total} candidates`,
                 }}
-                scroll={{ y: "calc(100vh - 300px)" }}
+                scroll={{ y: "calc(100vh - 330px)" }}
                 locale={{
                     emptyText: loading ? 'Loading...' : 'No candidates found'
                 }}

@@ -83,37 +83,37 @@
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --background: #0e0e10;
+  --foreground: #fafafa;
+  --card: #1a1a1d;
+  --card-foreground: #fafafa;
+  --popover: #1a1a1d;
+  --popover-foreground: #fafafa;
+  --primary: #00ef8b;
+  --primary-foreground: #0e0e10;
+  --secondary: #2a2a2e;
+  --secondary-foreground: #fafafa;
+  --muted: #2a2a2e;
+  --muted-foreground: #a0a0a0;
+  --accent: #2a2a2e;
+  --accent-foreground: #fafafa;
+  --destructive: #ff6b6b;
+  --border: #36363a;
+  --input: #36363a;
+  --ring: #00ef8b;
+  --chart-1: #00ef8b;
+  --chart-2: #4fc3f7;
+  --chart-3: #ff6b6b;
+  --chart-4: #ffd93d;
+  --chart-5: #6c5ce7;
+  --sidebar: #1a1a1d;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #00ef8b;
+  --sidebar-primary-foreground: #0e0e10;
+  --sidebar-accent: #2a2a2e;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #36363a;
+  --sidebar-ring: #00ef8b;
 }
 
 @layer base {
@@ -122,5 +122,138 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Dark mode table styling */
+@layer components {
+  .dark .ant-table {
+    background: var(--card) !important;
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-table-thead > tr > th {
+    background: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  
+  .dark .ant-table-tbody > tr > td {
+    background: var(--card) !important;
+    color: var(--card-foreground) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  
+  .dark .ant-table-tbody > tr:hover > td {
+    background: var(--accent) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-item {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-item a {
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-item-active {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-item-active a {
+    color: var(--primary-foreground) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-prev,
+  .dark .ant-table-pagination .ant-pagination-next {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+  }
+  
+  .dark .ant-table-pagination .ant-pagination-prev .anticon,
+  .dark .ant-table-pagination .ant-pagination-next .anticon {
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-input {
+    background: var(--input) !important;
+    color: var(--foreground) !important;
+    border-color: var(--border) !important;
+  }
+  
+  .dark .ant-input:hover,
+  .dark .ant-input:focus {
+    border-color: var(--primary) !important;
+  }
+  
+  .dark .ant-btn {
+    background: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
+    border-color: var(--border) !important;
+  }
+  
+  .dark .ant-btn:hover {
+    background: var(--accent) !important;
+    border-color: var(--primary) !important;
+  }
+  
+  .dark .ant-btn-primary {
+    background: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    border-color: var(--primary) !important;
+  }
+  
+  .dark .ant-btn-primary:hover {
+    background: var(--primary) !important;
+    opacity: 0.8 !important;
+  }
+  
+  .dark .ant-modal {
+    background: var(--card) !important;
+  }
+  
+  .dark .ant-modal-header {
+    background: var(--card) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  
+  .dark .ant-modal-title {
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-modal-content {
+    background: var(--card) !important;
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-modal-body {
+    background: var(--card) !important;
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-dropdown-menu {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+  }
+  
+  .dark .ant-dropdown-menu-item {
+    color: var(--card-foreground) !important;
+  }
+  
+  .dark .ant-dropdown-menu-item:hover {
+    background: var(--accent) !important;
+  }
+  
+  .dark .ant-tag {
+    background: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
+    border-color: var(--border) !important;
+  }
+  
+  .dark .ant-tooltip-inner {
+    background: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
   }
 }

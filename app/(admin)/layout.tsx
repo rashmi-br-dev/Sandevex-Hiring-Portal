@@ -1,13 +1,18 @@
+"use client";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
 import LogoutButton from "@/components/logout-button";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const [isGoogleFormOpen, setIsGoogleFormOpen] = useState(false);
+
     return (
         <div className="flex h-screen bg-white dark:bg-black text-foreground overflow-hidden">
 
@@ -42,12 +47,44 @@ export default function AdminLayout({
                             Offers
                         </Link>
 
-                        <Link
+                        {/* <Link
                             href="/candidates"
                             className="flex items-center px-3 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                         >
                             Candidates
-                        </Link>
+                        </Link> */}
+
+                        {/* Google Form Data Dropdown */}
+                        <div>
+                            <button
+                                onClick={() => setIsGoogleFormOpen(!isGoogleFormOpen)}
+                                className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                            >
+                                <span>Google Form Data</span>
+                                {isGoogleFormOpen ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                )}
+                            </button>
+                            
+                            {isGoogleFormOpen && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                    <Link
+                                        href="/candidates"
+                                        className="flex items-center px-3 py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                    >
+                                        Candidates
+                                    </Link>
+                                    <Link
+                                        href="/domain-preferences"
+                                        className="flex items-center px-3 py-2 text-sm text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                    >
+                                        Domain Preference
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="pt-8 mt-8 border-t border-black/10 dark:border-white/10">
                             <LogoutButton />
