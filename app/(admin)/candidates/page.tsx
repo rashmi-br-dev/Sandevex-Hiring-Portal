@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
-    Table, Input, Typography, Button, message, Tooltip, Tag, Modal
+    Table, Input, Typography, Button, message, Tooltip, Tag, Modal, Space
 } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import {
     SearchOutlined, SyncOutlined, FilterOutlined,
-    BarChartOutlined
+    BarChartOutlined, UserOutlined
 } from "@ant-design/icons";
 import StudentDetailsModal from "@/components/StudentDetailsModal";
 import SummaryModal from "@/components/SummaryModal";
@@ -68,6 +68,9 @@ export default function CandidatesPage() {
     // fetch unique colleges for filter
     async function fetchCollegeFilters() {
         try {
+            const domainRes = await fetch('/api/domain-preferences?limit=1000');
+            const domainData = await domainRes.json();
+
             const res = await fetch("/api/students/colleges");
 
             if (!res.ok) {
@@ -216,6 +219,116 @@ export default function CandidatesPage() {
         setSummaryModalVisible(true);
     };
 
+    // Handle set as intern
+    const handleSetAsIntern = async (student: Student) => {
+        try {
+            console.log("🔍 Setting as intern - Student data:", {
+                _id: student._id,
+                fullName: student.fullName,
+                email: student.email,
+                mobile: student.mobile,
+            });
+
+            // Find offer for this student
+            const offersRes = await fetch('/api/offers');
+            const offersData = await offersRes.json();
+            console.log("📋 Offers API response:", {
+                success: offersData.success,
+                totalOffers: offersData.offers?.length,
+                sampleOffer: offersData.offers?.[0]
+            });
+            
+            const studentOffer = offersData.offers?.find((offer: any) => 
+                offer.email === student.email
+            );
+
+            console.log("🎯 Offer match result:", {
+                studentEmail: student.email,
+                offerFound: !!studentOffer,
+                offerDetails: studentOffer ? {
+                    _id: studentOffer._id,
+                    email: studentOffer.email,
+                    status: studentOffer.status,
+                    candidateEmail: studentOffer.candidate?.email
+                } : null
+            });
+
+            if (!studentOffer) {
+                message.error('No offer found for this student');
+                return;
+            }
+
+            // Find domain preference for this student
+            const domainRes = await fetch('/api/domain-preferences?limit=1000');
+            const domainData = await domainRes.json();
+            console.log("📚 Domain preferences API response:", {
+                success: domainData.success,
+                totalPreferences: domainData.data?.length,
+                samplePreference: domainData.data?.[0]
+            });
+            
+            // Log all emails in domain preferences for debugging
+            const domainEmails = domainData.data?.map((pref: any) => pref.email) || [];
+            console.log("📧 All emails in domain preferences:", domainEmails);
+            console.log("🔍 Looking for student email:", student.email);
+
+            const studentDomain = domainData.data?.find((pref: any) => 
+                pref.email === student.email
+            );
+
+            console.log("🎯 Domain preference match result:", {
+                studentEmail: student.email,
+                preferenceFound: !!studentDomain,
+                preferenceDetails: studentDomain ? {
+                    _id: studentDomain._id,
+                    email: studentDomain.email,
+                    domain: studentDomain.domain,
+                    skillLevel: studentDomain.skillLevel
+                } : null
+            });
+
+            if (!studentDomain) {
+                message.error('No domain preference found for this student');
+                return;
+            }
+
+            // Create intern
+            console.log("🚀 Creating intern with data:", {
+                studentId: student._id,
+                offerId: studentOffer._id,
+                domainPreferenceId: studentDomain._id
+            });
+
+            const internRes = await fetch('/api/interns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: student._id,
+                    offerId: studentOffer._id,
+                    domainPreferenceId: studentDomain._id
+                })
+            });
+
+            const internData = await internRes.json();
+            console.log("✅ Intern creation result:", {
+                success: internData.success,
+                error: internData.error,
+                internId: internData.intern?._id
+            });
+
+            if (internData.success) {
+                message.success('Student successfully converted to intern!');
+                // Refresh the students list
+                fetchStudents(1, pagination.pageSize!, debouncedSearch, sortOrder, selectedCollege);
+            } else {
+                message.error(internData.error || 'Failed to convert student to intern');
+            }
+        } catch (error: any) {
+            console.error('❌ Error setting as intern:', error);
+            message.error('Failed to convert student to intern');
+        }
+    };
+
     const columns: ColumnsType<Student> = [
         {
             title: "Name",
@@ -300,6 +413,28 @@ export default function CandidatesPage() {
             sorter: true,
             width: 100,
             render: (date: string) => date ? new Date(date).toLocaleDateString() : "-",
+        },
+        {
+            title: "Actions",
+            key: "actions",
+            width: 120,
+            render: (_, record) => (
+                <Space>
+                    <Tooltip title="Set as Intern">
+                        <Button
+                            icon={<UserOutlined />}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetAsIntern(record);
+                            }}
+                            size="small"
+                            type="primary"
+                        >
+                            Set as Intern
+                        </Button>
+                    </Tooltip>
+                </Space>
+            ),
         },
     ];
 

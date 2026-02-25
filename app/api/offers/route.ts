@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Offer from "@/models/Offer";
 import Student from "@/models/Student";
+import { InternProfile } from "@/models/intern";
 import crypto from "crypto";
 
 export async function GET(req: Request) {
@@ -64,13 +65,13 @@ export async function GET(req: Request) {
         console.log(`Found ${offers.length} offers`);
 
         // Log first offer to check population
-        if (offers.length > 0) {
-            console.log("Sample offer:", {
-                id: offers[0]._id,
-                status: offers[0].status,
-                candidate: offers[0].candidateId
-            });
-        }
+        // if (offers.length > 0) {
+        //     console.log("Sample offer:", {
+        //         id: offers[0]._id,
+        //         status: offers[0].status,
+        //         candidate: offers[0].candidateId
+        //     });
+        // }
 
         return NextResponse.json({
             offers,
@@ -155,6 +156,77 @@ export async function POST(req: Request) {
         console.error("Error creating offer:", error);
         return NextResponse.json(
             { error: "Failed to create offer: " + (error as Error).message },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(req: Request) {
+    try {
+        await connectDB();
+        
+        const { offerId, physicalLetterCollected } = await req.json();
+
+        if (!offerId) {
+            return NextResponse.json(
+                { error: "Offer ID is required" },
+                { status: 400 }
+            );
+        }
+
+        // Find the offer
+        const offer = await Offer.findById(offerId);
+        if (!offer) {
+            return NextResponse.json(
+                { error: "Offer not found" },
+                { status: 404 }
+            );
+        }
+
+        // Update physical letter collected status
+        if (physicalLetterCollected !== undefined) {
+            offer.physicalLetterCollected = physicalLetterCollected;
+            
+            // If physical letter is collected, automatically set status to accepted
+            if (physicalLetterCollected && offer.status !== 'accepted') {
+                offer.status = 'accepted';
+                offer.respondedAt = new Date();
+            }
+            
+            await offer.save();
+        }
+
+        // If physical letter was collected, update the corresponding intern profile
+        if (physicalLetterCollected) {
+            const internProfile = await InternProfile.findOne({
+                internId: offer.candidateId
+            });
+
+            if (internProfile) {
+                internProfile.offerLetterIssued = true;
+                internProfile.offerLetterIssuedAt = new Date();
+                
+                // Also update offer status to accepted in intern profile
+                if (internProfile.offerStatus !== 'accepted') {
+                    internProfile.offerStatus = 'accepted';
+                }
+                
+                await internProfile.save();
+                console.log(`Updated intern profile for candidate ${offer.candidateId}: offer letter issued and status set to accepted`);
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: physicalLetterCollected 
+                ? "Physical letter marked as collected and intern profile updated" 
+                : "Physical letter status updated",
+            offer
+        });
+    } catch (error) {
+        console.error("Error updating offer:", error);
+        return NextResponse.json(
+            { error: "Failed to update offer: " + (error as Error).message },
             { status: 500 }
         );
     }

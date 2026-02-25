@@ -47,6 +47,13 @@ export default function AdminLayout({
                             Offers
                         </Link>
 
+                        <Link
+                            href="/interns"
+                            className="flex items-center px-3 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                        >
+                            Interns
+                        </Link>
+
                         {/* <Link
                             href="/candidates"
                             className="flex items-center px-3 py-2 text-sm font-medium text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
